@@ -1,0 +1,49 @@
+\documentclass[margin,hyperref,backref]{resume}
+
+\usepackage[colorlinks=true,urlcolor=black,bookmarks=true]{hyperref}            % For Urls
+\usepackage{multicol}                                                           % For multiple columns, as in courses
+\usepackage{enumitem}                                                           % To manage list identations
+\usepackage[usenames]{xcolor}                                                   % For colored text
+\usepackage{fontawesome}
+% \usepackage[hidelinks]{hyperref}
+
+\input{macros}
+
+\begin{document}
+\input{header}
+\begin{resume}
+
+    % \section{\mysidestyle Contact\\Information}
+    % \input{contact}\optionA
+
+    \section{\mysidestyle Education}
+    \input{acad}\optionB
+
+    \section{\mysidestyle Professional Experience}
+    \input{jobs}\optionC
+
+    \section{\mysidestyle Project\\Work}
+    \input{projects}\optionA
+
+    \section{\mysidestyle Publication}
+    \input{publications}\optionC
+
+    \section{\mysidestyle Courses}
+    \input{courses}\optionCustom
+
+    \section{\mysidestyle Technical\\Skills}
+    \input{skills}\optionA
+
+    % \section{\mysidestyle Awards \&\\Achievements}
+    % \input{awards}\optionC
+
+    \section{\mysidestyle Extra- \\Curricular}
+    \input{por}\optionB
+
+    % \section{\mysidestyle Hobbies \& \\Interests}
+    % \input{eca}\optionC
+
+\end{resume}
+
+\end{document}
+
