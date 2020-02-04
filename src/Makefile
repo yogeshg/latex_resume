@@ -10,7 +10,7 @@ FLAGS=--output-directory=$(OUTDIR)
 
 all: $(TARGETS)
 
-%.pdf: %.tex $(TEX_FILES)
+%.pdf: %.tex $(TEX_FILES) $(MD_FILES)
 	pdflatex --output-directory=$(OUTDIR) $<
 	cp $(OUTDIR)/$@ $@
 
@@ -27,6 +27,7 @@ setup:
 about:
 	@echo "Targets: " $(TARGETS)
 	@echo "Existing Targets: " $(EXISTING_TARGETS)
+	@echo "Markdown Targets: " $(MD_FILES)
 	@echo "Tex Targets: " $(TEX_FILES)
 
 
