@@ -1,0 +1,14 @@
+
+<h1>{{ request.user.user_name }}</h1>
+
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<ul>
+{% for content in user_content %}
+    <li>
+        {{content.section}}<br>
+        {{content.body}}
+    </li>
+{% endfor %}
+</ul>
+
