@@ -4,9 +4,6 @@ from django.shortcuts import render
 
 from .models import Content
 
-# def index(request):
-#     return HttpResponse("Hello, world. You're at the editor index.")
-
 
 @login_required
 def index(request):
