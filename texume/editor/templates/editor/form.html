@@ -3,12 +3,11 @@
 
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 
-<ul>
-{% for content in user_content %}
-    <li>
-        {{content.section}}<br>
-        {{content.body}}
-    </li>
+{% for section in user_sections %}
+    <iframe
+    width=75% height=200
+    src="{{section.url}}"
+    id="{{section.section}}_iframe"></iframe>
 {% endfor %}
-</ul>
+
 

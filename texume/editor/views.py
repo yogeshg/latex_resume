@@ -12,9 +12,13 @@ logger = logging.getLogger("EDITOR")
 
 @login_required
 def index(request):
-    user_content = Content.objects.filter(user_id__exact=request.user.id)
+    section_choices = [x for x, _ in Content.Section.choices]
+    user_sections = [
+        {'url': "content/?section={}".format(s), 'section':s}
+        for s in section_choices
+    ]
     return render(
-        request, "editor/form.html", {"user_content": user_content}
+        request, "editor/form.html", {"user_sections": user_sections}
     )
 
 @login_required
