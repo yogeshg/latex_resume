@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 
-from .models import Content, User
+from .models import Content, User, Resume
 from editor.forms import PartialContentForm
 
 logger = logging.getLogger("EDITOR")
@@ -29,43 +29,12 @@ def generate(request):
     GET requests the resume to be colated and generated.
     """
     if request.method == 'GET':
-        all_content = {s:_fetch_latest_content(request, s) for s in SECTION_CHOICES}
-
-
-def _generate_markdown(all_content):
-    header_sections = [
-        "Name",
-        "Link",
-        "Phone",
-        "Email",
-        "Postmail",
-    ]
-    header_format = """
-    {Name}
-    {Email} {Link}
-    {Phone} {Postmail}
-    """
-
-def _generate_section(section, content, formatting):
-    if formatting == "org-loc-title-date-points":
-        section_header = """
-        {org} {loc}
-        {title} {date}
-        """
-        _list = content.split("\n\n")
-        item_texts = []
-        for item in _list:
-            org, loc, title, date, points = item.split("\n", 5)
-            # section_header.format(org=org, loc=loc, title=title, date=date)
-            item_header = f"""
-            {org} {loc}
-            {title} {date}
-            """
-            item_texts.append(item_header + points)
-        return "\n".format(item_texts)
-    else:
-        return content
-
+        resume = Resume(request.user)
+        return render(request, 'editor/generated.html',
+            {
+                'markdown': resume.render('markdown'),
+                'latex': resume.render('latex')
+            })
 
 
 @login_required
@@ -91,7 +60,7 @@ def content(request):
     elif (
         request.method == 'GET'
         and 'section' in request.GET
-        and request.GET['section'] in section_choices
+        and request.GET['section'] in SECTION_CHOICES
         ):
         content = _fetch_latest_content(request, request.GET['section'])
         return _render_content_form(request, content)
@@ -105,7 +74,7 @@ def content(request):
                 request.method,
                 request.GET.get("section", "NOTFOUND"),
                 request.POST.get("section", "NOTFOUND"),
-                section_choices
+                SECTION_CHOICES
                 ))
 
 
