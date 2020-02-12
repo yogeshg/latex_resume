@@ -27,14 +27,21 @@ def index(request):
 def generate(request):
     if not authuser_is_user(request.user):
         raise Http404("user does not have a profile, contact admin")
+    mode = request.GET.get('mode', 'pdf')
+    if mode not in ('latex', 'markdown', 'pdf'):
+        raise Http404("invalid mode")
     if request.method == 'GET':
         resume = Resume(request.user)
         output_file = resume.save_latex()
-        try:
-            response = FileResponse(open(output_file, 'rb'), content_type='application/pdf')
-            return response
-        except FileNotFoundError:
-            raise Http404()
+        if mode == 'pdf':
+            try:
+                response = FileResponse(open(output_file, 'rb'), content_type='application/pdf')
+                return response
+            except FileNotFoundError:
+                raise Http404()
+        else:
+            rendered = resume.render(mode)
+            return render(request, "editor/generated.html", {mode:rendered})
 
 @login_required
 def content(request):
