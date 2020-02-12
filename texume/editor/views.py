@@ -42,8 +42,11 @@ def content(request):
     GET with section=x to request information for that section
     POST with form contents to validate and create new content
     """
+    if not request.method in ('GET', 'POST'):
+        raise Http404("Invalid method: {}".format(request.method))
+
     if not authuser_is_user(request.user):
-        raise Http404("user does not have a profile, contact admin")
+        raise Http404("User does not have a profile, contact admin")
 
     section = getattr(request, request.method).get('section', None)
     if section not in SECTION_CHOICES:
@@ -56,13 +59,6 @@ def content(request):
             logging.info("creating record with data: {}".format(form.save(commit=False)))
             form.save()
 
-    if request.method in ('GET', 'POST'):
-        return _render_content_form(request, content)
-    else:
-        raise Http404("Invalid method: {}".format(request.method))
-
-
-def _render_content_form(request, content):
     form = PartialContentForm(instance=content)
     return render(request, 'editor/content-form.html', {'form': form})
 
