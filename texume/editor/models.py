@@ -181,7 +181,7 @@ class TexFormats:
     @staticmethod
     def format_datepoints(DATE_POINTS: List[List[str]]):
         tex_template = r"""
-            \begin{itemize}[leftmargin=0pt,label={}]
+            \vspace{0mm}\begin{itemize}[leftmargin=0pt,label={}]
                 \item \DatePoint{POINT}{DATE}
             \end{itemize}
         """
