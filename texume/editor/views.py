@@ -3,9 +3,9 @@ import logging
 from django.http import HttpResponse, Http404
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, FileResponse, Http404
 
-from .models import Content, User, Resume
+from .models import Content, User, Resume, latest_content, authuser_is_user
 from editor.forms import PartialContentForm
 
 logger = logging.getLogger("EDITOR")
@@ -25,17 +25,16 @@ def index(request):
 
 @login_required
 def generate(request):
-    """
-    GET requests the resume to be colated and generated.
-    """
+    if not authuser_is_user(request.user):
+        raise Http404("user does not have a profile, contact admin")
     if request.method == 'GET':
         resume = Resume(request.user)
-        return render(request, 'editor/generated.html',
-            {
-                'markdown': resume.render('markdown'),
-                'latex': resume.render('latex')
-            })
-
+        output_file = resume.save_latex()
+        try:
+            response = FileResponse(open(output_file, 'rb'), content_type='application/pdf')
+            return response
+        except FileNotFoundError:
+            raise Http404()
 
 @login_required
 def content(request):
@@ -43,55 +42,24 @@ def content(request):
     GET with section=x to request information for that section
     POST with form contents to validate and create new content
     """
-    if (
-        request.method == 'POST'
-        and 'section' in request.POST
-        and request.POST['section'] in SECTION_CHOICES
-        ):
-        content = _fetch_latest_content(request, request.POST['section'])
+    if not authuser_is_user(request.user):
+        raise Http404("user does not have a profile, contact admin")
+
+    section = getattr(request, request.method).get('section', None)
+    if section not in SECTION_CHOICES:
+        raise Http404("valid section required")
+    content = latest_content(request.user, section)
+
+    if request.method == 'POST':
         form = PartialContentForm(request.POST, instance=content)
         if form.is_valid():
             logging.info("creating record with data: {}".format(form.save(commit=False)))
             form.save()
-            return _render_content_form(request, content)
-        else:
-            return render(request, 'editor/content-form.html', {'form': form})
 
-    elif (
-        request.method == 'GET'
-        and 'section' in request.GET
-        and request.GET['section'] in SECTION_CHOICES
-        ):
-        content = _fetch_latest_content(request, request.GET['section'])
+    if request.method in ('GET', 'POST'):
         return _render_content_form(request, content)
-
     else:
-        raise Http404("""
-            GET with section=x to request information for that section
-            POST with form contents to validate and create new content
-            {} {} {} {}
-            """.format(
-                request.method,
-                request.GET.get("section", "NOTFOUND"),
-                request.POST.get("section", "NOTFOUND"),
-                SECTION_CHOICES
-                ))
-
-
-def _fetch_latest_content(request, section):
-    user = User.objects.get(user=request.user)
-    content = (
-        Content.objects
-            .filter(user=user)
-            .filter(section__exact=section)
-        )
-    logging.info("latest section found for user ({}, {}, {}, {})".format(
-        content.exists(), request.user, type(request.user), section
-        ))
-    if content.exists():
-        return content.latest('created')
-    else:
-        return Content(user=user, section=section)
+        raise Http404("Invalid method: {}".format(request.method))
 
 
 def _render_content_form(request, content):

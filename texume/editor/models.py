@@ -4,6 +4,11 @@ import textwrap
 import os
 import re
 from typing import List
+import shutil
+import tempfile
+import subprocess
+import time
+
 
 from django.db import models
 from django.contrib.auth.models import User as AuthUser
@@ -11,6 +16,7 @@ from django.contrib.auth.models import User as AuthUser
 
 MIN_DATE = dt.date(year=2000, month=1, day=1)
 ALLOWED_FILE_FORMATS = ["markdown", "latex"]
+LATEX_DIR = "./wd/"  # assume this directory exists
 
 logger = logging.getLogger(__name__)
 
@@ -247,6 +253,32 @@ class Resume:
                 last_updated = content.created
         return last_updated
 
+    def save_latex(self):
+        temp_dir = tempfile.mkdtemp(dir=LATEX_DIR, prefix="user{}_".format(self.user.id))
+        working_directory = os.path.join(temp_dir, "wd")  # shutil wants to create a new file
+        user_date_filename = os.path.join(working_directory, "user-data.tex")
+        resume_file = os.path.join(working_directory, "user-resume.pdf")
+
+        shutil.copytree("../src/", working_directory)
+        with open(user_date_filename, "w") as file:
+            user_data = self.render("latex")
+            file.write(user_data)
+        command = [
+            "pdflatex",
+            "user-resume.tex"
+        ]
+        print(command)
+        p = subprocess.Popen(command, cwd=working_directory, stdin=subprocess.DEVNULL)
+        TIMEOUT = 10.0 # seconds
+        for _ in range(10):
+            return_code = p.poll()
+            if return_code is None:
+                time.sleep(TIMEOUT/10)
+        print("status:{} return_code:{}".format(
+            "SUCCESS" if return_code == 0 else "FAILURE", return_code
+            ))
+        return resume_file if return_code==0 else None
+
     def render(self, file_format):
         if file_format not in ALLOWED_FILE_FORMATS:
             raise ValueError(f"{file_format} can be one of {ALLOWED_FILE_FORMATS}")
@@ -280,6 +312,16 @@ class Resume:
         self._all_latest_content = {
             s: latest_content(self.user, s) for s in self.SECTION_CHOICES
         }
+
+
+def authuser_is_user(user: AuthUser) -> bool:
+    num_users = len(User.objects.filter(user=user))
+    if num_users == 0:
+        return False
+    else:
+        # num_users == 1
+        return True
+
 
 def latest_content(user: AuthUser, section: str) -> Content:
     user = User.objects.get(user=user)

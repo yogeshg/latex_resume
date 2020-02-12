@@ -5,9 +5,13 @@
 
 {% for section in user_sections %}
     <iframe
-    width=75% height=200
+    width=50% height=250
     src="{{section.url}}"
     id="{{section.section}}_iframe"></iframe>
 {% endfor %}
 
 
+ <iframe
+    width=50% height=1000
+    src="generate"
+    id="generate"></iframe>
