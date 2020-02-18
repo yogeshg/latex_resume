@@ -14,5 +14,12 @@ Setup
 ```
 
 
+Commands
+--------
 
+```bash
+    docker build -t texume:ubuntu-18.04 .
+    docker run -it -p 80:80 -v $PWD/src:/src -v $PWD/texume:/texume -v /tmp/logs/:/tmp/logs texume:ubuntu-18.04
+    docker run -it -p 80:80 -v $PWD/src:/src -v $PWD/texume:/texume -v /tmp/logs/:/tmp/logs texume:ubuntu-18.04 python manage.py test editor.models
+```
 
